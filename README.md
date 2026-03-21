@@ -1,31 +1,32 @@
 # React Mini E-commerce Store
 
-Modern mini e-commerce project built with **React** and **Tailwind CSS**.
+A modern mini e-commerce project built with React and CSS.
 
-This project includes product listing, category filters, search functionality and a fully working shopping cart with localStorage persistence.
+This project showcases a clean and responsive shopping experience with product listing, category filters, search functionality, sorting options, shopping cart features, quantity controls, and cart persistence using localStorage.
 
 ## Live Demo
 
-https://react-mini-ecommerce-jorge.netlify.app/
+[View Live Demo](https://react-mini-ecommerce-jorge.netlify.app/)
 
 ## Features
 
-- Product catalog
-- Category filters
+- Product listing
+- Category filtering
 - Search functionality
+- Product sorting
 - Shopping cart
 - Quantity controls
-- Remove items
+- Remove items from cart
+- Clear cart option
 - Cart persistence with localStorage
 - Responsive design
+- Modern UI
 
-## Technologies
+## Technologies Used
 
 - React
 - JavaScript
-- Tailwind CSS
+- CSS
 - Vite
 
-## Author
 
-Jorge Gauna
