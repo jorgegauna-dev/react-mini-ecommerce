@@ -1,423 +1,507 @@
 import { useEffect, useMemo, useState } from "react";
 
-const productsData = [
+const PRODUCTS = [
   {
     id: 1,
-    name: "Wireless Headphones",
-    category: "Audio",
-    price: 89,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80",
-    description: "Premium wireless sound with modern design and all-day comfort.",
+    name: "Minimal Sneakers",
+    category: "Shoes",
+    price: 79.99,
+    oldPrice: 99.99,
+    rating: 4.8,
+    badge: "Best Seller",
+    icon: "👟",
+    description: "Clean everyday sneakers with a modern look and comfortable fit.",
   },
   {
     id: 2,
-    name: "Smart Watch",
-    category: "Wearables",
-    price: 129,
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
-    description: "Track activity, notifications and performance in one device.",
+    name: "Urban Hoodie",
+    category: "Clothing",
+    price: 54.99,
+    oldPrice: 69.99,
+    rating: 4.7,
+    badge: "Trending",
+    icon: "🧥",
+    description: "Soft premium hoodie designed for comfort, style, and daily wear.",
   },
   {
     id: 3,
-    name: "Mechanical Keyboard",
+    name: "Smart Watch Pro",
     category: "Accessories",
-    price: 99,
-    image:
-      "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=900&q=80",
-    description: "Responsive typing experience with a clean modern setup.",
+    price: 129.99,
+    oldPrice: 159.99,
+    rating: 4.9,
+    badge: "Top Rated",
+    icon: "⌚",
+    description: "Track your day with a sleek smartwatch built for productivity.",
   },
   {
     id: 4,
-    name: "Gaming Mouse",
-    category: "Accessories",
-    price: 59,
-    image:
-      "https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=900&q=80",
-    description: "Smooth precision and ergonomic design for everyday use.",
+    name: "Classic Backpack",
+    category: "Bags",
+    price: 64.99,
+    oldPrice: 84.99,
+    rating: 4.6,
+    badge: "New",
+    icon: "🎒",
+    description: "Spacious backpack with minimalist design for work, study, or travel.",
   },
   {
     id: 5,
-    name: "Portable Speaker",
-    category: "Audio",
-    price: 75,
-    image:
-      "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=900&q=80",
-    description: "Compact speaker with powerful sound and modern portability.",
+    name: "Wireless Headphones",
+    category: "Electronics",
+    price: 89.99,
+    oldPrice: 119.99,
+    rating: 4.8,
+    badge: "Popular",
+    icon: "🎧",
+    description: "Immersive sound, long battery life, and a lightweight premium feel.",
   },
   {
     id: 6,
-    name: "4K Monitor",
-    category: "Display",
-    price: 249,
-    image:
-      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=900&q=80",
-    description: "Sharp display quality for creative work and productivity.",
+    name: "Sport T-Shirt",
+    category: "Clothing",
+    price: 29.99,
+    oldPrice: 39.99,
+    rating: 4.5,
+    badge: "Sale",
+    icon: "👕",
+    description: "Breathable athletic t-shirt ideal for training and casual outfits.",
   },
   {
     id: 7,
-    name: "Laptop Stand",
+    name: "Leather Wallet",
     category: "Accessories",
-    price: 39,
-    image:
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=900&q=80",
-    description: "Minimal desk accessory for a cleaner and more ergonomic setup.",
+    price: 39.99,
+    oldPrice: 49.99,
+    rating: 4.7,
+    badge: "Limited",
+    icon: "👛",
+    description: "Slim wallet with a refined design and practical everyday storage.",
   },
   {
     id: 8,
-    name: "Tablet Pro",
-    category: "Display",
-    price: 199,
-    image:
-      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=900&q=80",
-    description: "Portable screen experience ideal for work and entertainment.",
+    name: "Desk Lamp",
+    category: "Home",
+    price: 44.99,
+    oldPrice: 59.99,
+    rating: 4.6,
+    badge: "Modern",
+    icon: "💡",
+    description: "Minimal LED desk lamp that upgrades any workspace instantly.",
   },
 ];
 
-const categories = ["All", ...new Set(productsData.map((product) => product.category))];
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+
+const getSavedCart = () => {
+  try {
+    const savedCart = localStorage.getItem("mini-commerce-cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  } catch (error) {
+    return [];
+  }
+};
 
 export default function App() {
-  const [cart, setCart] = useState(() => {
-    const savedCart = localStorage.getItem("nova-cart");
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
-
-  const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("featured");
+  const [cart, setCart] = useState(getSavedCart);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("nova-cart", JSON.stringify(cart));
+    localStorage.setItem("mini-commerce-cart", JSON.stringify(cart));
   }, [cart]);
 
+  const categories = useMemo(
+    () => ["All", ...new Set(PRODUCTS.map((product) => product.category))],
+    []
+  );
+
   const filteredProducts = useMemo(() => {
-    return productsData.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
+    let items = [...PRODUCTS];
 
-      const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
+    if (selectedCategory !== "All") {
+      items = items.filter((product) => product.category === selectedCategory);
+    }
 
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, selectedCategory]);
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      items = items.filter(
+        (product) =>
+          product.name.toLowerCase().includes(term) ||
+          product.category.toLowerCase().includes(term) ||
+          product.description.toLowerCase().includes(term)
+      );
+    }
 
-  const addToCart = (product) => {
+    switch (sortBy) {
+      case "price-low":
+        items.sort((a, b) => a.price - b.price);
+        break;
+      case "price-high":
+        items.sort((a, b) => b.price - a.price);
+        break;
+      case "rating":
+        items.sort((a, b) => b.rating - a.rating);
+        break;
+      case "featured":
+      default:
+        items.sort((a, b) => {
+          const scoreA = a.rating + (a.badge === "Best Seller" || a.badge === "Top Rated" ? 0.2 : 0);
+          const scoreB = b.rating + (b.badge === "Best Seller" || b.badge === "Top Rated" ? 0.2 : 0);
+          return scoreB - scoreA;
+        });
+        break;
+    }
+
+    return items;
+  }, [searchTerm, selectedCategory, sortBy]);
+
+  const scrollToCatalog = () => {
+    document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const showCollection = () => {
+    setSelectedCategory("All");
+    setSearchTerm("");
+    setSortBy("featured");
+    scrollToCatalog();
+  };
+
+  const showFeatured = () => {
+    setSelectedCategory("All");
+    setSearchTerm("");
+    setSortBy("rating");
+    scrollToCatalog();
+  };
+
+  const getItemQuantity = (productId) => {
+    const item = cart.find((cartItem) => cartItem.id === productId);
+    return item ? item.quantity : 0;
+  };
+
+  const addToCart = (productId) => {
     setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.id === product.id);
+      const existingItem = prevCart.find((item) => item.id === productId);
 
-      if (existing) {
+      if (existingItem) {
         return prevCart.map((item) =>
-          item.id === product.id
+          item.id === productId
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
 
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [...prevCart, { id: productId, quantity: 1 }];
     });
+
+    setIsCartOpen(true);
   };
 
-  const increaseQty = (id) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
-  };
-
-  const decreaseQty = (id) => {
+  const updateQuantity = (productId, amount) => {
     setCart((prevCart) =>
       prevCart
         .map((item) =>
-          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+          item.id === productId
+            ? { ...item, quantity: item.quantity + amount }
+            : item
         )
         .filter((item) => item.quantity > 0)
     );
   };
 
-  const removeFromCart = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  const removeFromCart = (productId) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
   const clearCart = () => {
     setCart([]);
   };
 
+  const cartItems = cart
+    .map((item) => {
+      const product = PRODUCTS.find((product) => product.id === item.id);
+      if (!product) return null;
+
+      return {
+        ...product,
+        quantity: item.quantity,
+        total: product.price * item.quantity,
+      };
+    })
+    .filter(Boolean);
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.total, 0);
+  const shipping = subtotal === 0 ? 0 : subtotal >= 120 ? 0 : 9.99;
+  const total = subtotal + shipping;
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl"></div>
-        <div className="absolute right-0 top-24 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl"></div>
-      </div>
+    <div className="app-shell">
+      <div
+        className={`overlay ${isCartOpen ? "show" : ""}`}
+        onClick={() => setIsCartOpen(false)}
+      />
 
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-badge">RG</div>
           <div>
-            <h1 className="text-2xl font-bold tracking-wide">Nova Store</h1>
-            <p className="text-sm text-slate-400">React E-commerce Demo</p>
+            <p className="brand-label">React Store</p>
+            <h1>Mini E-commerce</h1>
           </div>
+        </div>
 
-          <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold">
-            Cart: {totalItems}
-          </div>
+        <div className="topbar-actions">
+          <button className="ghost-btn" onClick={showCollection}>
+            Collection
+          </button>
+          <button className="ghost-btn" onClick={showFeatured}>
+            Featured
+          </button>
+          <button className="cart-btn" onClick={() => setIsCartOpen(true)}>
+            Cart
+            <span>{totalItems}</span>
+          </button>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <span className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-1 text-sm font-semibold text-cyan-300">
-              Functional React Project
-            </span>
-
-            <h2 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl md:text-6xl">
-              Modern e-commerce store with a real working cart.
-            </h2>
-
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              This portfolio project was built with React and Tailwind CSS to
-              showcase product listing, category filters, search, shopping cart
-              logic and persistent cart data with localStorage.
+      <main className="page">
+        <section className="hero">
+          <div className="hero-content">
+            <span className="eyebrow">Modern shopping experience</span>
+            <h2>Build a clean, fast and portfolio-ready React store.</h2>
+            <p>
+              Product listing, category filters, search, sorting, shopping cart,
+              quantity controls and localStorage persistence in one polished
+              project.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href="#products"
-                className="rounded-xl bg-cyan-400 px-6 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-              >
-                Shop Now
-              </a>
-
-              <a
-                href="#cart"
-                className="rounded-xl border border-white/15 bg-white/5 px-6 py-3 font-semibold transition hover:bg-white/10"
-              >
+            <div className="hero-actions">
+              <button className="primary-btn" onClick={scrollToCatalog}>
+                Explore Products
+              </button>
+              <button className="secondary-btn" onClick={() => setIsCartOpen(true)}>
                 View Cart
-              </a>
+              </button>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl">
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Products</p>
-                <p className="mt-2 text-3xl font-bold">{productsData.length}</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Cart Items</p>
-                <p className="mt-2 text-3xl font-bold">{totalItems}</p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
-                <p className="text-sm text-slate-400">Total</p>
-                <p className="mt-2 text-3xl font-bold">${totalPrice}</p>
-              </div>
+          <div className="hero-stats">
+            <div className="stat-card">
+              <strong>8</strong>
+              <span>Products</span>
             </div>
-
-            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900 p-5">
-              <p className="text-sm text-slate-400">Features Included</p>
-              <ul className="mt-4 space-y-2 text-slate-200">
-                <li>• Product cards with images</li>
-                <li>• Search by product name</li>
-                <li>• Filter by category</li>
-                <li>• Add to cart functionality</li>
-                <li>• Increase / decrease quantity</li>
-                <li>• Remove items and clear cart</li>
-                <li>• localStorage cart persistence</li>
-              </ul>
+            <div className="stat-card">
+              <strong>6</strong>
+              <span>Categories</span>
+            </div>
+            <div className="stat-card">
+              <strong>100%</strong>
+              <span>Responsive</span>
+            </div>
+            <div className="stat-card">
+              <strong>Cart</strong>
+              <span>Saved locally</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Main */}
-      <main className="mx-auto grid max-w-7xl gap-10 px-6 pb-16 lg:grid-cols-[2fr_1fr]">
-        {/* Products */}
-        <section id="products">
-          <div className="mb-8 flex flex-col gap-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-                  Products
-                </p>
-                <h3 className="mt-2 text-3xl font-bold">Featured Collection</h3>
-              </div>
-
-              <input
-                type="text"
-                placeholder="Search product..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-400 focus:border-cyan-400 focus:outline-none sm:max-w-xs"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    selectedCategory === category
-                      ? "bg-cyan-400 text-slate-950"
-                      : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredProducts.map((product) => (
-              <article
-                key={product.id}
-                className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 transition hover:-translate-y-1 hover:border-cyan-400/30"
-              >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="h-56 w-full object-cover"
-                />
-
-                <div className="p-5">
-                  <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300">
-                    {product.category}
-                  </span>
-
-                  <h4 className="mt-4 text-xl font-bold">{product.name}</h4>
-                  <p className="mt-3 text-sm leading-6 text-slate-300">
-                    {product.description}
-                  </p>
-                  <p className="mt-4 text-2xl font-bold">${product.price}</p>
-
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="mt-5 w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {filteredProducts.length === 0 && (
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-300">
-              No products found for that search or category.
-            </div>
-          )}
         </section>
 
-        {/* Cart */}
-        <aside
-          id="cart"
-          className="h-fit rounded-3xl border border-white/10 bg-white/5 p-6 lg:sticky lg:top-6"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
-                Shopping Cart
-              </p>
-              <h3 className="mt-2 text-2xl font-bold">Your Order</h3>
-            </div>
-
-            {cart.length > 0 && (
-              <button
-                onClick={clearCart}
-                className="text-sm font-semibold text-red-400 hover:text-red-300"
-              >
-                Clear
-              </button>
-            )}
+        <section className="controls">
+          <div className="control-group search-group">
+            <label>Search</label>
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
-          {cart.length === 0 ? (
-            <p className="mt-6 text-slate-400">
-              Your cart is empty. Add some products to see them here.
-            </p>
-          ) : (
-            <div className="mt-6 space-y-4">
-              {cart.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-white/10 bg-slate-900 p-4"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h4 className="font-semibold">{item.name}</h4>
-                      <p className="mt-1 text-sm text-slate-400">
-                        ${item.price} each
-                      </p>
-                    </div>
+          <div className="control-group">
+            <label>Category</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      className="text-sm font-semibold text-red-400 hover:text-red-300"
-                    >
-                      Remove
-                    </button>
+          <div className="control-group">
+            <label>Sort by</label>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="featured">Featured</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+            </select>
+          </div>
+        </section>
+
+        <section className="catalog-section" id="catalog">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">Catalog</span>
+              <h3>Featured Products</h3>
+            </div>
+            <p>{filteredProducts.length} products found</p>
+          </div>
+
+          <div className="product-grid">
+            {filteredProducts.map((product) => {
+              const quantity = getItemQuantity(product.id);
+
+              return (
+                <article className="product-card" key={product.id}>
+                  <div className={`product-visual visual-${product.id % 4}`}>
+                    <span className="product-badge">{product.badge}</span>
+                    <div className="product-icon">{product.icon}</div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => decreaseQty(item.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-lg"
-                      >
-                        -
-                      </button>
-
-                      <span className="min-w-[24px] text-center font-semibold">
-                        {item.quantity}
-                      </span>
-
-                      <button
-                        onClick={() => increaseQty(item.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-lg"
-                      >
-                        +
-                      </button>
+                  <div className="product-body">
+                    <div className="product-topline">
+                      <span>{product.category}</span>
+                      <span>★ {product.rating}</span>
                     </div>
 
-                    <p className="font-bold">${item.price * item.quantity}</p>
+                    <h4>{product.name}</h4>
+                    <p>{product.description}</p>
+
+                    <div className="price-row">
+                      <strong>{formatCurrency(product.price)}</strong>
+                      <span>{formatCurrency(product.oldPrice)}</span>
+                    </div>
+
+                    <div className="product-actions">
+                      {quantity > 0 && (
+                        <div className="qty-box">
+                          <button type="button" onClick={() => updateQuantity(product.id, -1)}>
+                            -
+                          </button>
+                          <span>{quantity}</span>
+                          <button type="button" onClick={() => updateQuantity(product.id, 1)}>
+                            +
+                          </button>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="primary-btn add-btn"
+                        onClick={() => addToCart(product.id)}
+                      >
+                        {quantity > 0 ? "Add one more" : "Add to cart"}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      </main>
+
+      <aside className={`cart-panel ${isCartOpen ? "open" : ""}`}>
+        <div className="cart-header">
+          <div>
+            <p className="eyebrow">Shopping Cart</p>
+            <h3>{totalItems} item(s)</h3>
+          </div>
+          <button className="close-btn" type="button" onClick={() => setIsCartOpen(false)}>
+            ✕
+          </button>
+        </div>
+
+        {cartItems.length === 0 ? (
+          <div className="empty-cart">
+            <div className="empty-icon">🛒</div>
+            <h4>Your cart is empty</h4>
+            <p>Add some products to see them here.</p>
+          </div>
+        ) : (
+          <>
+            <div className="cart-list">
+              {cartItems.map((item) => (
+                <div className="cart-item" key={item.id}>
+                  <div className="cart-item-icon">{item.icon}</div>
+
+                  <div className="cart-item-info">
+                    <div className="cart-item-head">
+                      <div>
+                        <h4>{item.name}</h4>
+                        <span>{item.category}</span>
+                      </div>
+                      <strong>{formatCurrency(item.total)}</strong>
+                    </div>
+
+                    <div className="cart-item-actions">
+                      <div className="qty-box">
+                        <button type="button" onClick={() => updateQuantity(item.id, -1)}>
+                          -
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button type="button" onClick={() => updateQuantity(item.id, 1)}>
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="remove-btn"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
-
-              <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-5">
-                <div className="flex items-center justify-between text-lg">
-                  <span className="font-semibold">Total</span>
-                  <span className="text-2xl font-bold">${totalPrice}</span>
-                </div>
-
-                <button className="mt-5 w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300">
-                  Checkout
-                </button>
-              </div>
             </div>
-          )}
-        </aside>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-8 text-center text-slate-400">
-        <p>© {new Date().getFullYear()} Nova Store. React portfolio project.</p>
-      </footer>
+            <div className="cart-summary">
+              <div className="summary-row">
+                <span>Subtotal</span>
+                <strong>{formatCurrency(subtotal)}</strong>
+              </div>
+              <div className="summary-row">
+                <span>Shipping</span>
+                <strong>{shipping === 0 ? "Free" : formatCurrency(shipping)}</strong>
+              </div>
+              <div className="summary-row total-row">
+                <span>Total</span>
+                <strong>{formatCurrency(total)}</strong>
+              </div>
+
+              <p className="shipping-note">
+                {subtotal >= 120
+                  ? "You unlocked free shipping."
+                  : "Free shipping on orders over $120."}
+              </p>
+
+              <button type="button" className="primary-btn checkout-btn">
+                Proceed to Checkout
+              </button>
+              <button
+                type="button"
+                className="secondary-btn clear-btn"
+                onClick={clearCart}
+              >
+                Clear Cart
+              </button>
+            </div>
+          </>
+        )}
+      </aside>
     </div>
   );
 }
